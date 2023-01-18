@@ -3,7 +3,7 @@ package tradeoffer
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -263,8 +263,8 @@ func (c *Client) Create(other steamid.SteamId, accessToken *string, myItems, the
 	return t.TradeOfferId, nil
 }
 
-func (c *Client) GetOwnInventory(contextId uint64, appId uint32) (*inventory.Inventory, error) {
-	return inventory.GetOwnInventory(c.client, contextId, appId)
+func (c *Client) GetOwnInventory(contextId uint64, appId uint32, tradableOnly bool) (*inventory.Inventory, error) {
+	return inventory.GetOwnInventory(c.client, contextId, appId, tradableOnly)
 }
 
 func (c *Client) GetPartnerInventory(other steamid.SteamId, contextId uint64, appId uint32, offerId *uint64) (*inventory.Inventory, error) {
@@ -310,7 +310,7 @@ func (c *Client) GetTradeReceipt(tradeId uint64) ([]*TradeReceiptItem, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +343,7 @@ func (c *Client) getEscrowDuration(queryUrl string) (*EscrowDuration, error) {
 		return nil, fmt.Errorf("failed to retrieve escrow duration: %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -402,11 +402,11 @@ func (c *Client) CreateWithRetry(other steamid.SteamId, accessToken *string, myI
 		}, retryCount, retryDelay)
 }
 
-func (c *Client) GetOwnInventoryWithRetry(contextId uint64, appId uint32, retryCount int, retryDelay time.Duration) (*inventory.Inventory, error) {
+func (c *Client) GetOwnInventoryWithRetry(contextId uint64, appId uint32, retryCount int, retryDelay time.Duration, tradableOnly bool) (*inventory.Inventory, error) {
 	var res *inventory.Inventory
 	return res, withRetry(
 		func() (err error) {
-			res, err = c.GetOwnInventory(contextId, appId)
+			res, err = c.GetOwnInventory(contextId, appId, tradableOnly)
 			return err
 		}, retryCount, retryDelay)
 }

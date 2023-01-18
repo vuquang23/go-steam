@@ -12,9 +12,9 @@ type TradeEndReason uint
 
 const (
 	TradeEndReason_Complete  TradeEndReason = 1
-	TradeEndReason_Cancelled                = 2
-	TradeEndReason_Timeout                  = 3
-	TradeEndReason_Failed                   = 4
+	TradeEndReason_Cancelled TradeEndReason = 2
+	TradeEndReason_Timeout   TradeEndReason = 3
+	TradeEndReason_Failed    TradeEndReason = 4
 )
 
 func newItem(event *tradeapi.Event) *Item {
