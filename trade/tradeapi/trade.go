@@ -129,8 +129,8 @@ func (t *Trade) GetForeignInventory(contextId uint64, appId uint32, start *uint)
 }
 
 // Thread-safe.
-func (t *Trade) GetOwnInventory(contextId uint64, appId uint32) (*inventory.Inventory, error) {
-	return inventory.GetOwnInventory(t.client, contextId, appId)
+func (t *Trade) GetOwnInventory(contextId uint64, appId uint32, tradableOnly bool) (*inventory.Inventory, error) {
+	return inventory.GetOwnInventory(t.client, contextId, appId, tradableOnly)
 }
 
 func (t *Trade) Chat(message string) (*Status, error) {
