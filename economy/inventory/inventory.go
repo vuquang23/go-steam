@@ -154,6 +154,10 @@ type Description struct {
 	Tags    []*Tag
 }
 
+func (d *Description) GetImageURL(iconURL string) string {
+	return "https://steamcommunity-a.akamaihd.net/economy/image/" + iconURL
+}
+
 type DescriptionLines []*DescriptionLine
 
 func (d *DescriptionLines) UnmarshalJSON(data []byte) error {
