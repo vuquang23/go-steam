@@ -154,8 +154,12 @@ type Description struct {
 	Tags    []*Tag
 }
 
-func (d *Description) GetImageURL(iconURL string) string {
-	return "https://steamcommunity-a.akamaihd.net/economy/image/" + iconURL
+func (d *Description) GetImageURL() string {
+	return "https://steamcommunity-a.akamaihd.net/economy/image/" + d.IconUrl
+}
+
+func (d *Description) GetLargeImageURL() string {
+	return "https://steamcommunity-a.akamaihd.net/economy/image/" + d.IconUrlLarge
 }
 
 type DescriptionLines []*DescriptionLine
