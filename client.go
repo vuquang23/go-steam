@@ -7,7 +7,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"hash/crc32"
-	"io/ioutil"
+	"io"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -351,7 +351,7 @@ func (c *Client) handleMulti(packet *protocol.Packet) {
 			return
 		}
 
-		payload, err = ioutil.ReadAll(r)
+		payload, err = io.ReadAll(r)
 		if err != nil {
 			c.Errorf("handleMulti: Error while decompressing: %v", err)
 			return
@@ -380,8 +380,8 @@ func (c *Client) handleClientCMList(packet *protocol.Packet) {
 	l := make([]*netutil.PortAddr, 0)
 	for i, ip := range body.GetCmAddresses() {
 		l = append(l, &netutil.PortAddr{
-			readIp(ip),
-			uint16(body.GetCmPorts()[i]),
+			IP:   readIp(ip),
+			Port: uint16(body.GetCmPorts()[i]),
 		})
 	}
 

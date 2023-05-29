@@ -49,8 +49,8 @@ func (t *Trade) onStatus(status *tradeapi.Status) error {
 	if status.NewVersion {
 		t.api.Version = status.Version
 
-		t.MeReady = status.Me.Ready == true
-		t.ThemReady = status.Them.Ready == true
+		t.MeReady = bool(status.Me.Ready)
+		t.ThemReady = bool(status.Them.Ready)
 	}
 
 	switch status.TradeStatus {

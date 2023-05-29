@@ -13,7 +13,11 @@ func (t *Trade) action(status *tradeapi.Status, err error) error {
 	if err != nil {
 		return err
 	}
-	t.onStatus(status)
+
+	if err = t.onStatus(status); err != nil {
+		return err
+	}
+
 	return nil
 }
 
