@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -112,6 +113,13 @@ func (w *Web) apiLogOn() error {
 	w.SteamLogin = result.Authenticateuser.Token
 	w.SteamLoginSecure = result.Authenticateuser.TokenSecure
 
+	// generate session id.
+	sessionID, err := w.generateSessionID()
+	if err != nil {
+		return err
+	}
+	w.SessionId = sessionID
+
 	w.client.Emit(new(WebLoggedOnEvent))
 	return nil
 }
@@ -141,4 +149,12 @@ func (w *Web) handleAuthNonceResponse(packet *protocol.Packet) {
 	if atomic.CompareAndSwapUint32(&w.relogOnNonce, 1, 0) {
 		w.LogOn()
 	}
+}
+
+func (w *Web) generateSessionID() (string, error) {
+	bytes := make([]byte, 12)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }
