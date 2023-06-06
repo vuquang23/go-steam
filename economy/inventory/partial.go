@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
+	"strings"
 )
 
 // A partial inventory as sent by the Steam API.
@@ -32,12 +34,21 @@ func DoInventoryRequest(client *http.Client, req *http.Request) (*PartialInvento
 	}
 	defer resp.Body.Close()
 
-	inv := new(PartialInventory)
-	err = json.NewDecoder(resp.Body).Decode(inv)
+	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	return inv, nil
+
+	var inv PartialInventory
+	err = json.Unmarshal(bytes, &inv)
+	if err != nil {
+		str := string(bytes)
+		if strings.Contains(str, "g_steamID = false;") && strings.Contains(str, "<title>Sign In</title>") {
+			err = errors.New("not logged in")
+		}
+		return nil, err
+	}
+	return &inv, nil
 }
 
 func GetFullInventory(getFirst func() (*PartialInventory, error), getNext func(start uint) (*PartialInventory, error)) (*Inventory, error) {

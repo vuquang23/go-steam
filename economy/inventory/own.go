@@ -16,7 +16,7 @@ func GetPartialOwnInventory(client *http.Client, contextId uint64, appId uint32,
 	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	return DoInventoryRequest(client, req)
 }
