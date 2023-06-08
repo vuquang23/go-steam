@@ -55,7 +55,11 @@ func GenerateDeviceID(accountName string, password string) string {
 
 func SetCookies(client *http.Client, cookies []*http.Cookie) error {
 	if client.Jar == nil {
-		client.Jar, _ = cookiejar.New(new(cookiejar.Options))
+		jar, err := cookiejar.New(new(cookiejar.Options))
+		if err != nil {
+			return err
+		}
+		client.Jar = jar
 	}
 	communityUrl, err := url.Parse(baseUrl)
 	if err != nil {
