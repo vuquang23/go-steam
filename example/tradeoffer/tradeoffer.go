@@ -4,27 +4,63 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
+	"time"
 
+	"github.com/vuquang23/go-steam/community"
+	"github.com/vuquang23/go-steam/totp"
 	"github.com/vuquang23/go-steam/tradeoffer"
 )
 
 var (
-	apiKey           string
-	sessionID        string
-	steamLogin       string
-	steamLoginSecure string
+	apiKey       string
+	accountName  string
+	password     string
+	sharedSecret string
 )
+
+const baseUrl = "https://steamcommunity.com"
 
 func init() {
 	apiKey = os.Getenv("API_KEY")
-	steamLogin = os.Getenv("STEAM_LOGIN")
-	steamLoginSecure = os.Getenv("STEAM_LOGIN_SECURE")
-	sessionID = os.Getenv("SESSION_ID")
+	accountName = os.Getenv("ACCOUNT_NAME")
+	password = os.Getenv("PASSWORD")
+	sharedSecret = os.Getenv("SHARED_SECRET")
 }
 
 func main() {
-	client := tradeoffer.NewClient(tradeoffer.APIKey(apiKey), sessionID, steamLogin, steamLoginSecure)
+	communityClient, err := community.NewClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	code, err := totp.GenerateTotpCode(sharedSecret, time.Now())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = communityClient.Login(community.LoginDetails{
+		AccountName:   accountName,
+		Password:      password,
+		TwoFactorCode: code,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client := tradeoffer.NewClient(
+		tradeoffer.APIKey(apiKey),
+		communityClient.GetSessionID(),
+	)
+	communityUrl, err := url.Parse(baseUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = client.SetCookies(communityClient.GetCookies(communityUrl))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	var (
 		getSent              = true

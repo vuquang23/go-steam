@@ -18,10 +18,10 @@ type TradeReceiptItem struct {
 }
 
 func parseTradeReceipt(data []byte) ([]*TradeReceiptItem, error) {
-	reg := regexp.MustCompile("oItem =\\s+(.+?});")
+	reg := regexp.MustCompile(`oItem =\\s+(.+?});`)
 	itemMatches := reg.FindAllSubmatch(data, -1)
 	if itemMatches == nil {
-		return nil, fmt.Errorf("items not found\n")
+		return nil, fmt.Errorf("items not found")
 	}
 	items := make([]*TradeReceiptItem, 0, len(itemMatches))
 	for _, m := range itemMatches {

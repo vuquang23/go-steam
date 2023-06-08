@@ -2,6 +2,7 @@ package trade
 
 import (
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/vuquang23/go-steam/steamid"
@@ -20,14 +21,18 @@ type Trade struct {
 	api          *tradeapi.Trade
 }
 
-func New(sessionId, steamLogin, steamLoginSecure string, other steamid.SteamId) *Trade {
+func New(sessionId string, other steamid.SteamId) *Trade {
 	return &Trade{
 		other,
 		false, false,
 		time.Unix(0, 0),
 		nil,
-		tradeapi.New(sessionId, steamLogin, steamLoginSecure, other),
+		tradeapi.New(sessionId, other),
 	}
+}
+
+func (t *Trade) SetCookies(cookies []*http.Cookie) error {
+	return t.api.SetCookies(cookies)
 }
 
 func (t *Trade) Version() uint {
