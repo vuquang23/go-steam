@@ -26,7 +26,10 @@ func NewClient() (*Client, error) {
 		{Name: "timezoneOffset", Value: "0,0"},
 	}
 	httpClient := new(http.Client)
-	SetCookies(httpClient, cookies)
+	err := SetCookies(httpClient, cookies)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{client: httpClient}, nil
 }
 
@@ -90,14 +93,14 @@ func (c *Client) Login(details LoginDetails) error {
 		return errors.New(session.Message)
 	}
 
-	// generate session id.
+	// generate session ID
 	sessionID, err := GenerateSessionID()
 	if err != nil {
 		return err
 	}
 	session.OAuth.ID = sessionID
 
-	// gen device ID
+	// generate device ID
 	session.OAuth.DeviceID = GenerateDeviceID(details.AccountName, details.Password)
 
 	// get cookies: `steamLogin`, `steamLoginSecure`
