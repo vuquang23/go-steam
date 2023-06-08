@@ -4,33 +4,65 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
+	"time"
 
+	"github.com/vuquang23/go-steam/community"
 	"github.com/vuquang23/go-steam/confirmation"
+	"github.com/vuquang23/go-steam/totp"
 )
 
 var (
-	accountName      string
-	password         string
-	identitySecret   string
-	steamLogin       string
-	steamLoginSecure string
-	sessionID        string
-	steamID          string
+	accountName    string
+	password       string
+	identitySecret string
+	sharedSecret   string
 )
+
+const baseUrl = "https://steamcommunity.com"
 
 func init() {
 	accountName = os.Getenv("ACCOUNT_NAME")
 	password = os.Getenv("PASSWORD")
 	identitySecret = os.Getenv("IDENTITY_SECRET")
-	steamLogin = os.Getenv("STEAM_LOGIN")
-	steamLoginSecure = os.Getenv("STEAM_LOGIN_SECURE")
-	sessionID = os.Getenv("SESSION_ID")
-	steamID = os.Getenv("STEAM_ID")
+	sharedSecret = os.Getenv("SHARED_SECRET")
 }
 
 func main() {
-	c := confirmation.NewClient(sessionID, steamLogin, steamLoginSecure, identitySecret, accountName, password, steamID)
+	communityClient, err := community.NewClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	code, err := totp.GenerateTotpCode(sharedSecret, time.Now())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = communityClient.Login(community.LoginDetails{
+		AccountName:   accountName,
+		Password:      password,
+		TwoFactorCode: code,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	c := confirmation.NewClient(
+		communityClient.GetSessionID(),
+		communityClient.GetDeviceID(),
+		identitySecret,
+		communityClient.GetSteamID(),
+	)
+	communityUrl, err := url.Parse(baseUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = c.SetCookies(communityClient.GetCookies(communityUrl))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	confs, err := c.GetConfirmations()
 	if err != nil {

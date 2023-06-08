@@ -2,6 +2,7 @@ package tradeoffer
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,14 +25,17 @@ type Client struct {
 	sessionId string
 }
 
-func NewClient(key APIKey, sessionId, steamLogin, steamLoginSecure string) *Client {
+func NewClient(key APIKey, sessionId string) *Client {
 	c := &Client{
 		new(http.Client),
 		key,
 		sessionId,
 	}
-	community.SetCookies(c.client, sessionId, steamLogin, steamLoginSecure)
 	return c
+}
+
+func (c *Client) SetCookies(cookies []*http.Cookie) error {
+	return community.SetCookies(c.client, cookies)
 }
 
 func (c *Client) GetOffer(offerId uint64) (*TradeOfferResult, error) {
@@ -59,7 +63,7 @@ func (c *Client) GetOffer(offerId uint64) (*TradeOfferResult, error) {
 
 func (c *Client) GetOffers(getSent bool, getReceived bool, getDescriptions bool, activeOnly bool, historicalOnly bool, timeHistoricalCutoff *uint32) (*TradeOffersResult, error) {
 	if !getSent && !getReceived {
-		return nil, fmt.Errorf("getSent and getReceived can't be both false\n")
+		return nil, errors.New("getSent and getReceived can't be both false")
 	}
 
 	params := map[string]string{

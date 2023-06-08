@@ -14,8 +14,8 @@ type EscrowDuration struct {
 
 func parseEscrowDuration(data []byte) (*EscrowDuration, error) {
 	// TODO: why we are using case insensitive matching?
-	myRegex := regexp.MustCompile("(?i)g_daysMyEscrow[\\s=]+(\\d+);")
-	theirRegex := regexp.MustCompile("(?i)g_daysTheirEscrow[\\s=]+(\\d+);")
+	myRegex := regexp.MustCompile(`(?i)g_daysMyEscrow[\\s=]+(\\d+);`)
+	theirRegex := regexp.MustCompile(`(?i)g_daysTheirEscrow[\\s=]+(\\d+);`)
 
 	myM := myRegex.FindSubmatch(data)
 	theirM := theirRegex.FindSubmatch(data)

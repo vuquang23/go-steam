@@ -19,10 +19,8 @@ import (
 type Client struct {
 	client *http.Client
 
-	sessionID        string
-	steamLogin       string
-	steamLoginSecure string
-	identitySecret   string
+	sessionID      string
+	identitySecret string
 
 	timeOffset int64
 	deviceID   string
@@ -31,30 +29,28 @@ type Client struct {
 
 func NewClient(
 	sessionID string,
-	steamLogin string,
-	steamLoginSecure string,
+	deviceID string,
 	identitySecret string,
-	accountName string,
-	password string,
 	steamID string,
 ) *Client {
 	c := Client{
-		client:           new(http.Client),
-		sessionID:        sessionID,
-		steamLogin:       steamLogin,
-		steamLoginSecure: steamLoginSecure,
-		identitySecret:   identitySecret,
-		timeOffset:       0,
-		deviceID:         getDeviceID(accountName, password),
-		steamID:          steamID,
+		client:         new(http.Client),
+		sessionID:      sessionID,
+		identitySecret: identitySecret,
+		timeOffset:     0,
+		deviceID:       deviceID,
+		steamID:        steamID,
 	}
-	community.SetCookies(c.client, sessionID, steamLogin, steamLoginSecure)
 
 	// if err := c.UpdateTimeOffset(); err != nil {
 	// 	return nil, err
 	// }
 
 	return &c
+}
+
+func (c *Client) SetCookies(cookies []*http.Cookie) error {
+	return community.SetCookies(c.client, cookies)
 }
 
 func (c *Client) UpdateTimeOffset() error {
