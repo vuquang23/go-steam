@@ -19,6 +19,8 @@ type APIKey string
 
 const apiUrl = "https://api.steampowered.com/IEconService/%s/v%d"
 
+const defaultUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
+
 type Client struct {
 	client    *http.Client
 	key       APIKey
@@ -39,11 +41,16 @@ func (c *Client) SetCookies(cookies []*http.Cookie) error {
 }
 
 func (c *Client) GetOffer(offerId uint64) (*TradeOfferResult, error) {
-	resp, err := c.client.Get(fmt.Sprintf(apiUrl, "GetTradeOffer", 1) + "?" + netutil.ToUrlValues(map[string]string{
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(apiUrl, "GetTradeOffer", 1)+"?"+netutil.ToUrlValues(map[string]string{
 		"key":          string(c.key),
 		"tradeofferid": strconv.FormatUint(offerId, 10),
 		"language":     "en_us",
-	}).Encode())
+	}).Encode(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", defaultUserAgent)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +95,12 @@ func (c *Client) GetOffers(getSent bool, getReceived bool, getDescriptions bool,
 	if timeHistoricalCutoff != nil {
 		params["time_historical_cutoff"] = strconv.FormatUint(uint64(*timeHistoricalCutoff), 10)
 	}
-	resp, err := c.client.Get(fmt.Sprintf(apiUrl, "GetTradeOffers", 1) + "?" + netutil.ToUrlValues(params).Encode())
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(apiUrl, "GetTradeOffers", 1)+"?"+netutil.ToUrlValues(params).Encode(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", defaultUserAgent)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -111,10 +123,12 @@ func (c *Client) GetOffers(getSent bool, getReceived bool, getDescriptions bool,
 // It is also possible to implement Decline/Cancel using steamcommunity,
 // which have more predictable responses
 func (c *Client) action(method string, version uint, offerId uint64) error {
-	resp, err := c.client.Do(netutil.NewPostForm(fmt.Sprintf(apiUrl, method, version), netutil.ToUrlValues(map[string]string{
+	req := netutil.NewPostForm(fmt.Sprintf(apiUrl, method, version), netutil.ToUrlValues(map[string]string{
 		"key":          string(c.key),
 		"tradeofferid": strconv.FormatUint(offerId, 10),
-	})))
+	}))
+	req.Header.Set("User-Agent", defaultUserAgent)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -144,6 +158,7 @@ func (c *Client) Accept(offerId uint64) error {
 		"tradeofferid": strconv.FormatUint(offerId, 10),
 	}))
 	req.Header.Add("Referer", baseurl)
+	req.Header.Set("User-Agent", defaultUserAgent)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -234,6 +249,7 @@ func (c *Client) Create(other steamid.SteamId, accessToken *string, myItems, the
 	// Create request
 	req := netutil.NewPostForm("https://steamcommunity.com/tradeoffer/new/send", netutil.ToUrlValues(data))
 	req.Header.Add("Referer", referer)
+	req.Header.Set("User-Agent", defaultUserAgent)
 
 	// Send request
 	resp, err := c.client.Do(req)
@@ -302,6 +318,7 @@ func (c *Client) getPartialPartnerInventory(other steamid.SteamId, contextId uin
 		panic(err)
 	}
 	req.Header.Add("Referer", baseUrl+"?partner="+strconv.FormatUint(uint64(other.GetAccountId()), 10))
+	req.Header.Set("User-Agent", defaultUserAgent)
 
 	return inventory.DoInventoryRequest(c.client, req)
 }
@@ -309,7 +326,12 @@ func (c *Client) getPartialPartnerInventory(other steamid.SteamId, contextId uin
 // Can be used to verify accepted tradeoffer and find out received asset ids
 func (c *Client) GetTradeReceipt(tradeId uint64) ([]*TradeReceiptItem, error) {
 	url := fmt.Sprintf("https://steamcommunity.com/trade/%d/receipt", tradeId)
-	resp, err := c.client.Get(url)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", defaultUserAgent)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +364,12 @@ func (c *Client) GetOfferEscrowDuration(offerId uint64) (*EscrowDuration, error)
 }
 
 func (c *Client) getEscrowDuration(queryUrl string) (*EscrowDuration, error) {
-	resp, err := c.client.Get(queryUrl)
+	req, err := http.NewRequest(http.MethodGet, queryUrl, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", defaultUserAgent)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve escrow duration: %v", err)
 	}

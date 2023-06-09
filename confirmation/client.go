@@ -207,6 +207,8 @@ func (c *Client) call(req string, key string, tag string, values jsonObj) ([]byt
 	if err != nil {
 		return nil, err
 	}
+	request.Header.Set("User-Agent", defaultUserAgent)
+	request.Header.Set("Accept", "*/*")
 
 	response, err := c.client.Do(request)
 	if err != nil {

@@ -3,7 +3,6 @@ package community
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -66,12 +65,12 @@ func (c *Client) Login(details LoginDetails) error {
 	}
 
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-	request.Header.Add("Content-Length", strconv.Itoa(len(values)))
-	request.Header.Add("X-Requested-With", "XMLHttpRequest")
-	request.Header.Add("Origin", baseUrl)
-	request.Header.Add("Referer", loginUrl)
-	request.Header.Add("User-Agent", defaultUserAgent)
-	request.Header.Add("Accept", "*/*")
+	request.Header.Set("Origin", baseUrl)
+	request.Header.Set("Referer", loginUrl)
+	request.Header.Set("User-Agent", defaultUserAgent)
+	request.Header.Set("Content-Length", strconv.Itoa(len(values)))
+	request.Header.Set("X-Requested-With", "XMLHttpRequest")
+	request.Header.Set("Accept", "*/*")
 
 	response, err := c.client.Do(request)
 	if err != nil {
@@ -130,12 +129,21 @@ func (c *Client) setSession(session loginSession) {
 }
 
 func (c *Client) GetRSAKey(accountName string) (*getRSAKeyRes, error) {
-	path := fmt.Sprintf("%s?username=%s", rsaUrl, accountName)
-	request, err := http.NewRequest(http.MethodPost, path, nil)
+	values := url.Values{"username": {accountName}}.Encode()
+	request, err := http.NewRequest(http.MethodPost, rsaUrl, strings.NewReader(values))
 	if err != nil {
 		return nil, err
 	}
+
 	request.Header.Set("Referer", loginUrl)
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	request.Header.Set("Content-Length", strconv.Itoa(len(values)))
+	request.Header.Set("X-Requested-With", "XMLHttpRequest")
+	request.Header.Set("Origin", baseUrl)
+	request.Header.Set("Referer", loginUrl)
+	request.Header.Set("User-Agent", defaultUserAgent)
+	request.Header.Set("Accept", "*/*")
+
 	response, err := c.client.Do(request)
 	if err != nil {
 		return nil, err
