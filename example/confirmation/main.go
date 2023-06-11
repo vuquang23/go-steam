@@ -55,6 +55,7 @@ func main() {
 		identitySecret,
 		communityClient.GetSteamID(),
 	)
+
 	communityUrl, err := url.Parse(baseUrl)
 	if err != nil {
 		log.Fatal(err)

@@ -28,7 +28,7 @@ type loginSession struct {
 type oAuth struct {
 	ID               string `json:"-"`
 	DeviceID         string `json:"-"`
-	SteamID          string `json:"string"`
+	SteamID          string `json:"steamid"`
 	Auth             string `json:"auth"`
 	TokenSecure      string `json:"token_secure"`
 	WebCookie        string `json:"webcookie"`

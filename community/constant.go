@@ -12,4 +12,5 @@ const (
 const (
 	cookieSteamLoginSecure = "steamLoginSecure"
 	cookieSteamLogin       = "steamLogin"
+	cookieSessionID        = "sessionid"
 )

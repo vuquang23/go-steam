@@ -98,6 +98,14 @@ func (c *Client) Login(details LoginDetails) error {
 		return err
 	}
 	session.OAuth.ID = sessionID
+	if err := SetCookies(c.client, []*http.Cookie{
+		{
+			Name:  cookieSessionID,
+			Value: url.QueryEscape(sessionID),
+		},
+	}); err != nil {
+		return err
+	}
 
 	// generate device ID
 	session.OAuth.DeviceID = GenerateDeviceID(details.AccountName, details.Password)
