@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -90,53 +91,64 @@ func (c *Client) UpdateTimeOffset() error {
 
 func (c *Client) GetConfirmations() ([]*Confirmation, error) {
 	// call steam server
-	req := "conf"
+	req := "getlist"
 	key, err := c.generateConfirmationCode(loadConfirmationTag)
 	if err != nil {
 		return nil, err
 	}
-	res, err := c.call(req, key, loadConfirmationTag, nil)
+	resBytes, err := c.call(req, key, loadConfirmationTag, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// parse html
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(res))
+	var res struct {
+		Success bool            `json:"success"`
+		Conf    []*Confirmation `json:"conf"`
+	}
+	err = json.Unmarshal(resBytes, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	entries := doc.Find(".mobileconf_list_entry")
-	if entries == nil {
-		return nil, ErrCannotFindConfirmations
+	return res.Conf, nil
+}
+
+func (c *Client) GetOfferID(conf *Confirmation) (uint64, error) {
+	req := fmt.Sprintf("%s/%s", "detailspage", conf.ID)
+	key, err := c.generateConfirmationCode(tradeInfoTag)
+	if err != nil {
+		return 0, err
+	}
+	resBytes, err := c.call(req, key, tradeInfoTag, nil)
+	if err != nil {
+		return 0, err
 	}
 
-	descriptions := doc.Find(".mobileconf_list_entry_description")
-	if descriptions == nil {
-		return nil, ErrCannotFindDescriptions
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(resBytes))
+	if err != nil {
+		return 0, err
 	}
 
-	if len(entries.Nodes) != len(descriptions.Nodes) {
-		return nil, ErrConfirmationsDescMismatch
+	offer := doc.Find(".tradeoffer")
+	if offer == nil {
+		return 0, ErrCannotFindOffer
 	}
 
-	confirmations := make([]*Confirmation, 0, len(entries.Nodes))
-	for _, sel := range entries.Nodes {
-		var conf Confirmation
-		for _, attr := range sel.Attr {
-			switch attr.Key {
-			case "data-confid":
-				conf.ID, _ = strconv.ParseUint(attr.Val, 10, 64)
-			case "data-key":
-				conf.Key, _ = strconv.ParseUint(attr.Val, 10, 64)
-			case "data-creator":
-				conf.OfferID, _ = strconv.ParseUint(attr.Val, 10, 64)
-			}
-		}
-		confirmations = append(confirmations, &conf)
+	value, ok := offer.Attr("id")
+	if !ok {
+		return 0, ErrCannotFindOffer
+	}
+	strs := strings.Split(value, "_")
+	if len(strs) < 2 {
+		return 0, ErrCannotFindOffer
 	}
 
-	return confirmations, nil
+	offerID, err := strconv.ParseUint(strs[1], 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return offerID, nil
 }
 
 func (c *Client) AcceptConfirmation(conf *Confirmation) error {
@@ -156,8 +168,8 @@ func (c *Client) AnswerConfirmation(conf *Confirmation, tag string) error {
 	req := "ajaxop"
 	values := jsonObj{
 		"op":  tag,
-		"cid": uint64(conf.ID),
-		"ck":  conf.Key,
+		"cid": conf.ID,
+		"ck":  conf.Nonce,
 	}
 	bytes, err := c.call(req, key, tag, values)
 	if err != nil {

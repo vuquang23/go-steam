@@ -76,7 +76,19 @@ func main() {
 	m, _ := json.Marshal(confs)
 	fmt.Println(string(m))
 
-	err = c.AcceptConfirmation(confs[0])
+	offerID, err := c.GetOfferID(confs[0])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(offerID)
+
+	// err = c.AcceptConfirmation(confs[0])
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	err = c.CancelConfirmation(confs[0])
 	if err != nil {
 		log.Fatal(err)
 	}
