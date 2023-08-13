@@ -108,8 +108,12 @@ func (c *Client) GetOffers(getSent bool, getReceived bool, getDescriptions bool,
 	t := new(struct {
 		Response *TradeOffersResult
 	})
-	if err = json.NewDecoder(resp.Body).Decode(t); err != nil {
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
 		return nil, err
+	}
+	if err = json.Unmarshal(bodyBytes, t); err != nil {
+		return nil, fmt.Errorf("unmarshal error: %s, response: %s", err, bodyBytes)
 	}
 	if t.Response == nil {
 		return nil, newSteamErrorf("steam returned empty offers result\n")
