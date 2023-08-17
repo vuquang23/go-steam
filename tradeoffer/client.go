@@ -214,7 +214,7 @@ func (c *Client) Create(other steamid.SteamId, accessToken *string, myItems, the
 
 	jto, err := json.Marshal(to)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 
 	// Create url parameters for request
@@ -238,7 +238,7 @@ func (c *Client) Create(other steamid.SteamId, accessToken *string, myItems, the
 			}
 			paramsJson, err := json.Marshal(params)
 			if err != nil {
-				panic(err)
+				return 0, err
 			}
 
 			data["trade_offer_create_params"] = string(paramsJson)
@@ -319,7 +319,7 @@ func (c *Client) getPartialPartnerInventory(other steamid.SteamId, contextId uin
 
 	req, err := http.NewRequest("GET", baseUrl+"partnerinventory/?"+netutil.ToUrlValues(data).Encode(), nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	req.Header.Add("Referer", baseUrl+"?partner="+strconv.FormatUint(uint64(other.GetAccountId()), 10))
 	req.Header.Set("User-Agent", defaultUserAgent)
@@ -466,7 +466,7 @@ func (c *Client) GetTradeReceiptWithRetry(tradeId uint64, retryCount int, retryD
 
 func withRetry(f func() error, retryCount int, retryDelay time.Duration) error {
 	if retryCount <= 0 {
-		panic("retry count must be more than 0")
+		return errors.New("retry count must be more than 0")
 	}
 	i := 0
 	for {
