@@ -32,6 +32,15 @@ func NewClient() (*Client, error) {
 	return &Client{client: httpClient}, nil
 }
 
+func (c *Client) SetProxy(proxy string) error {
+	proxyUrl, err := url.Parse(proxy)
+	if err != nil {
+		return err
+	}
+	c.client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
+	return nil
+}
+
 func (c *Client) Login(details LoginDetails) error {
 	if details.AccountName == "" || details.Password == "" {
 		return errors.New("missing account name or password")
