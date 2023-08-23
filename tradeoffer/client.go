@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -34,6 +35,15 @@ func NewClient(key APIKey, sessionId string) *Client {
 		sessionId,
 	}
 	return c
+}
+
+func (c *Client) SetProxy(proxy string) error {
+	proxyUrl, err := url.Parse(proxy)
+	if err != nil {
+		return err
+	}
+	c.client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
+	return nil
 }
 
 func (c *Client) SetCookies(cookies []*http.Cookie) error {
