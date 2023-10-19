@@ -119,6 +119,10 @@ func (c *Client) GetConfirmations() ([]*Confirmation, error) {
 		return nil, err
 	}
 
+	if !res.Success {
+		return nil, ErrCannotGetConfirmations
+	}
+
 	return res.Conf, nil
 }
 
